@@ -3,6 +3,7 @@ from django.utils import simplejson as json
 from google.appengine.ext import db
 from kay.ext.testutils.gae_test_base import GAETestBase
 from datetime import datetime
+import urllib
 from htbrpg2kay.models import (
   MyUser, Chara, Entry, Bookmark,
 )
@@ -80,8 +81,16 @@ class ModelTest(GAETestBase):
     es_ = Entry.all().fetch(100)
     self.assertEquals(len(es_), 3)
     self.assertEquals(es_[2].url, 'http://example.jp')
-#     self.assertEquals(len(es_), 3)
-#     self.assertEquals(es_[2].url, 'http://example.jp')
+
+    # get_hatebu_api
+    htb = Entry.get_hatebu_api('http://developer.hatena.ne.jp/ja/documents/bookmark/apis/getinfo')
+    self.assert_(htb)
+
+    # get_entry
+    e4 = Entry.get_entry('http://hoge.com')
+    self.assertEquals(e4.title, u'タイトル')
+    e5 = Entry.get_entry('http://developer.hatena.ne.jp/ja/documents/bookmark/apis/getinfo')
+    self.assertEquals(e5.title, u'はてなブックマークエントリー情報取得API - Hatena Developer Center')
 
   def test_bookmark(self):
     u = MyUser(email = 'suzuki@hoge.com', first_name = 'shin')
@@ -122,5 +131,6 @@ class ModelTest(GAETestBase):
     self.assertEquals(len(bs2), 3)
     self.assertEquals(bs2[1].user, u'cubick')
     # get_bookmarks
-#     bs3 = Bookmark.get_bookmarks(e)
-#     dir(bs3)
+    bs3 = Bookmark.get_bookmarks(e)
+    self.assertEquals(len(bs3), 1)
+    self.assertEquals(bs[0].user, u'jojo')

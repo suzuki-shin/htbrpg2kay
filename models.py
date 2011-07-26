@@ -6,6 +6,7 @@ from google.appengine.ext import db
 from kay.auth.models import GoogleUser
 import kay.db
 from datetime import datetime
+import urllib
 
 # Create your models here.
 class MyUser(GoogleUser):
@@ -80,17 +81,25 @@ class Entry(SsModel):
       entry = entries[0]
     else:
       htb = cls.get_hatebu_api(url)
-      entry = cls.add_entry(htb)
+      entry = cls.add_entry(title      = htb.get('title'),
+                            entry_url  = htb.get('entry_url'),
+                            eid        = int(htb.get('eid')),
+                            url        = htb.get('url'),
+                            count      = int(htb.get('count')),
+                            screenshot = htb.get('screenshot'),
+                            bookmarks  = htb.get('bookmarks'))
 
     return entry
 
-#   @classmethod
-#   def get_hatebu_api(cls, url):
-#     api_url = "http://b.hatena.ne.jp/entry/jsonlite/"
-#     htb_json = urllib.urlopen(api_url + url).read()
-#     htb = json.loads(htb_json)
+  @classmethod
+  def get_hatebu_api(cls, url):
+    u"""
+    """
+    api_url = "http://b.hatena.ne.jp/entry/jsonlite/"
+    htb_json = urllib.urlopen(api_url + url).read()
+    htb = json.loads(htb_json)
 
-#     return htb
+    return htb
 
   @classmethod
   def add_entry(cls,
@@ -154,10 +163,10 @@ class Bookmark(SsModel):
 
     return
 
-#   @classmethod
-#   def get_bookmarks(cls, entry):
-#     u"""指定したエントリにひもづくブックマークデータを取得する
-#     """
-#     bookmarks = cls.all().filter('entry =', entry).fetch(100)
+  @classmethod
+  def get_bookmarks(cls, entry):
+    u"""指定したエントリにひもづくブックマークデータを取得する
+    """
+    bookmarks = cls.all().filter('entry =', entry).fetch(100)
 
-#     return json.dumps(bookmarks)
+    return bookmarks
