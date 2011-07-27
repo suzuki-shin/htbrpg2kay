@@ -26,6 +26,7 @@ view_groups = [
   ViewGroup(
     Rule('/', endpoint='index', view='htbrpg2kay.views.index'),
     Rule('/chara', endpoint='chara', view='htbrpg2kay.views.chara'),
+    Rule('/chara/edit', endpoint='chara_edit', view='htbrpg2kay.views.chara_edit'),
   )
 ]
 

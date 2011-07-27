@@ -25,12 +25,15 @@ from kay.auth.decorators import login_required
 
 """
 
-from kay.utils import render_to_response
+from kay.utils import (
+  render_to_response, url_for,
+)
 from werkzeug import (
   unescape, redirect, Response,
 )
 from kay.auth.decorators import login_required
-import models
+import htbrpg2kay.models
+from htbrpg2kay.forms import CharaForm
 
 # Create your views here.
 
@@ -39,8 +42,19 @@ def index(request):
 
 @login_required
 def chara(request):
-  u"""ユーザーキャラのデータをjsonで返す
+  u"""getならユーザーキャラのデータをjsonで返す
+  postならキャラデータの登録する
   """
   chara = request.user.get_chara()
+  form = CharaForm()
+  if request.method == "POST":
+    chara.name = request.form['name']
+    chara.put()
+    return redirect(url_for('htbrpg2kay/index'))
   return Response(chara.to_json())
 
+@login_required
+def chara_edit(request):
+  form = CharaForm()
+  return render_to_response('htbrpg2kay/chara_edit.html',
+                            {'form': form.as_widget()})
