@@ -38,6 +38,9 @@ def index(request):
   return render_to_response('htbrpg2kay/index.html', {'message': 'Hello htbrpg2kay'})
 
 @login_required
-def user(request):
+def chara(request):
+  u"""ユーザーキャラのデータをjsonで返す
+  """
   chara = request.user.get_chara()
   return Response(chara.to_json())
+
