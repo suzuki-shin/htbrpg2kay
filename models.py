@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # htbrpg2kay.models
+
 from django.utils import simplejson as json
 from google.appengine.ext import db
 from google.appengine.ext import db
@@ -7,6 +8,7 @@ from kay.auth.models import GoogleUser
 import kay.db
 from datetime import datetime
 import urllib
+import logging
 
 # Create your models here.
 class MyUser(GoogleUser):

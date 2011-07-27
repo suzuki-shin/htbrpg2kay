@@ -26,9 +26,18 @@ from kay.auth.decorators import login_required
 """
 
 from kay.utils import render_to_response
-
+from werkzeug import (
+  unescape, redirect, Response,
+)
+from kay.auth.decorators import login_required
+import models
 
 # Create your views here.
 
 def index(request):
   return render_to_response('htbrpg2kay/index.html', {'message': 'Hello htbrpg2kay'})
+
+@login_required
+def user(request):
+  chara = request.user.get_chara()
+  return Response(chara.to_json())
