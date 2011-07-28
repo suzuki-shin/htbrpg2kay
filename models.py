@@ -111,6 +111,8 @@ class Entry(SsModel):
     u"""エントリデータを登録する
     """
 
+    # TODO 同じeidがあったら登録しない（それとも更新する、がいい？）ようにする
+
     entry = cls(
       title      = title,
       count      = count,

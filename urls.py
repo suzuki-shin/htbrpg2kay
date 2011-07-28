@@ -24,9 +24,11 @@ from kay.routing import (
 
 view_groups = [
   ViewGroup(
-    Rule('/', endpoint='index', view='htbrpg2kay.views.index'),
-    Rule('/chara', endpoint='chara', view='htbrpg2kay.views.chara'),
+    Rule('/',           endpoint='index',      view='htbrpg2kay.views.index'),
+    Rule('/chara',      endpoint='chara',      view='htbrpg2kay.views.chara'),
+    Rule('/entry',      endpoint='chara',      view='htbrpg2kay.views.chara'),
     Rule('/chara/edit', endpoint='chara_edit', view='htbrpg2kay.views.chara_edit'),
+    Rule('/api',  endpoint='entry_get',  view='htbrpg2kay.views.entry_get'),
   )
 ]
 

@@ -32,7 +32,9 @@ from werkzeug import (
   unescape, redirect, Response,
 )
 from kay.auth.decorators import login_required
-import htbrpg2kay.models
+from  htbrpg2kay.models import (
+  Entry,
+)
 from htbrpg2kay.forms import CharaForm
 
 # Create your views here.
@@ -58,3 +60,20 @@ def chara_edit(request):
   form = CharaForm()
   return render_to_response('htbrpg2kay/chara_edit.html',
                             {'form': form.as_widget()})
+
+def entry_get(request):
+  u"""はてなブックマークデータをAPIから取得してdatastoreに保存する
+  """
+  url = request.args['url']
+  htb = Entry.get_hatebu_api(url)
+  e = Entry.add_entry(
+    url        = htb['url'],
+    entry_url  = htb['entry_url'],
+    eid        = int(htb['eid']),
+    title      = htb['title'],
+    count      = int(htb['count']),
+    screenshot = htb['screenshot'],
+    bookmarks  = htb['bookmarks'],
+  )
+
+  return Response(e.url)
