@@ -111,7 +111,9 @@ class Entry(SsModel):
     u"""エントリデータを登録する
     """
 
-    # TODO 同じeidがあったら登録しない（それとも更新する、がいい？）ようにする
+    # TODO 同じeidがあったら登録しないでNoneを返す
+    if Entry.all().filter('eid =', eid).fetch(1):
+      return None
 
     entry = cls(
       title      = title,
@@ -125,6 +127,26 @@ class Entry(SsModel):
     Bookmark.add_bookmarks(bookmarks, entry);
 
     return entry
+
+  @classmethod
+  def add_or_update_entry(cls,
+                          url, entry_url, eid,
+                          title = '', count = 0,
+                          screenshot = '', bookmarks = {}):
+    e = cls.add_entry(cls, url, entry_url, eid, title,
+                      count, screenshot, bookmarks)
+    if e: return e
+
+    e = Entry(url        = url,
+              entry_url, = entry_url
+              eid        = eid,
+              title      = title,
+              count      = count,
+              screenshot = screenshot,
+              bookmarks  = bookmarks)
+    e.put()
+
+    return e
 
 #   def explore(self, user):
 #     u"""

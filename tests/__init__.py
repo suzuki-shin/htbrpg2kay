@@ -81,6 +81,21 @@ class ModelTest(GAETestBase):
     es_ = Entry.all().fetch(100)
     self.assertEquals(len(es_), 3)
     self.assertEquals(es_[2].url, 'http://example.jp')
+    e3_ = Entry.add_entry(title = u'hogehoge',
+                         count= 10,
+                         url= 'http://iiiexample.jp',
+                         entry_url='http://kkkentry_url.com',
+                         eid= 3)
+    self.assertEquals(e3_, None)
+
+    # add_or_update_entry
+    e3__ = Entry.add_or_update_entry(
+      title = u'hogehoge',
+      count= 10,
+      url= 'http://iiiexample.jp',
+      entry_url='http://kkkentry_url.com',
+      eid= 6)
+
 
     # get_hatebu_api
     htb = Entry.get_hatebu_api('http://developer.hatena.ne.jp/ja/documents/bookmark/apis/getinfo')

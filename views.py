@@ -75,5 +75,6 @@ def entry_get(request):
     screenshot = htb['screenshot'],
     bookmarks  = htb['bookmarks'],
   )
+  if not e: return
 
   return Response(e.url)
