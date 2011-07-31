@@ -133,12 +133,12 @@ class Entry(SsModel):
                           url, entry_url, eid,
                           title = '', count = 0,
                           screenshot = '', bookmarks = {}):
-    e = cls.add_entry(cls, url, entry_url, eid, title,
+    e = cls.add_entry(url, entry_url, eid, title,
                       count, screenshot, bookmarks)
     if e: return e
 
     e = Entry(url        = url,
-              entry_url, = entry_url
+              entry_url  = entry_url,
               eid        = eid,
               title      = title,
               count      = count,
