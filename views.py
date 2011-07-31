@@ -78,3 +78,16 @@ def entry_get(request):
   if not e: return
 
   return Response(e.url)
+
+@login_required
+def explore(request):
+  u"""ダンジョン（はてなブックマークエントリー）を冒険して 結果をjsonで返す
+  """
+  url = request.args['url']
+  if not url: return Response('invalid url')
+
+  chara = request.user.get_chara()
+  entry = Entry.get_entry(url)
+  result = chara.explore(entry)
+
+  return Response(result)

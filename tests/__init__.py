@@ -48,6 +48,30 @@ class ModelTest(GAETestBase):
                         'speed':1,
                         'user': u.email}))
 
+    # explore
+    e = Entry(title = u'exploreタイトル',
+              count = 100,
+              url = 'http://explore.com',
+              entry_url = 'http://b.hatena.ne.jp/kjkkjkj',
+              eid = 10)
+    e.put()
+    b1 = Bookmark(user = 'hoge',
+                 entry = e)
+    b1.put()
+    b2 = Bookmark(user = 'hoge2n',
+                 entry = e)
+    b2.put()
+    b3 = Bookmark(user = 'hoge3',
+                 entry = e)
+    b3.put()
+    b4 = Bookmark(user = 'hoge4',
+                 entry = e)
+    b4.put()
+    b_res = c.explore(e)
+    print b_res
+    print isinstance(b_res['win'], bool)
+    print isinstance(b_res['results'], list)
+
   def test_entry(self):
     e = Entry(title = u'タイトル',
               count = 10,

@@ -14,6 +14,7 @@ import logging
 class MyUser(GoogleUser):
   def get_chara(self):
     u"""ユーザーキャラデータを取得する
+    まだキャラが存在しなければ新たに登録する
     """
     charas = Chara.all().filter('user =', self).fetch(1)
     if charas:
@@ -64,6 +65,32 @@ class Chara(SsModel):
     attr_dict = dict(attr_list)
     return json.dumps(attr_dict)
 
+  def explore(self, entry):
+    u"""
+    """
+    bookmarks = entry.get_bookmarks()
+    #     results = [res for b in bookmarks: res = self.battle(b) if res['win']]
+    battle_result = {'win': True, 'results': []}
+    for b in bookmarks:
+      res = self.battle(b)
+      if not res['win']:
+        battle_result['win'] = False
+        break
+
+      battle_result['results'].append(res)
+
+    return battle_result
+
+  def battle(self, bookmark):
+    u"""戦闘結果を返す
+    """
+    res = {}
+    res['win'] = True                   # 仮
+    res['damage'] = 10                  # 仮
+
+    return res
+
+
 class Entry(SsModel):
   u"""はてぶエントリーページ（ダンジョンと見なす）
   """
@@ -83,13 +110,14 @@ class Entry(SsModel):
       entry = entries[0]
     else:
       htb = cls.get_hatebu_api(url)
-      entry = cls.add_entry(title      = htb.get('title'),
-                            entry_url  = htb.get('entry_url'),
-                            eid        = int(htb.get('eid')),
-                            url        = htb.get('url'),
-                            count      = int(htb.get('count')),
-                            screenshot = htb.get('screenshot'),
-                            bookmarks  = htb.get('bookmarks'))
+      entry = cls.add_entry(
+        title      = htb.get('title'),
+        entry_url  = htb.get('entry_url'),
+        eid        = int(htb.get('eid')),
+        url        = htb.get('url'),
+        count      = int(htb.get('count')),
+        screenshot = htb.get('screenshot'),
+        bookmarks  = htb.get('bookmarks'))
 
     return entry
 
@@ -148,17 +176,10 @@ class Entry(SsModel):
 
     return e
 
-#   def explore(self, user):
-#     u"""
-#     """
-#     bookmarks = self.get_bookmarks()
-
-#     return bookmarks
-
-#   def get_bookmarks(self):
-#     u"""
-#     """
-#     return Bookmark.get_bookmarks(self)
+  def get_bookmarks(self):
+    u"""
+    """
+    return Bookmark.get_bookmarks(self)
 
 
 class Bookmark(SsModel):
