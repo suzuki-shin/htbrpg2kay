@@ -25,6 +25,8 @@ from kay.auth.decorators import login_required
 
 """
 
+import logging
+import inspect
 from kay.utils import (
   render_to_response, url_for,
 )
@@ -43,29 +45,32 @@ def index(request):
   return render_to_response('htbrpg2kay/index.html', {'message': 'Hello htbrpg2kay'})
 
 @login_required
-def chara(request):
+def adventurer(request):
   u"""getならユーザーキャラのデータをjsonで返す
   postならキャラデータの登録する
   """
-  chara = request.user.get_chara()
+  adventurer = request.user.get_adventurer()
   form = CharaForm()
   if request.method == "POST":
-    chara.name = request.form['name']
-    chara.put()
+    adventurer.name = request.form['name']
+    adventurer.put()
     return redirect(url_for('htbrpg2kay/index'))
-  return Response(chara.to_json())
+  return Response(adventurer.to_json())
 
 @login_required
-def chara_edit(request):
+def adventurer_edit(request):
   form = CharaForm()
-  return render_to_response('htbrpg2kay/chara_edit.html',
+  return render_to_response('htbrpg2kay/adventurer_edit.html',
                             {'form': form.as_widget()})
 
 def entry_get(request):
   u"""はてなブックマークデータをAPIから取得してdatastoreに保存する
   """
+  logging.debug(inspect.currentframe().f_lineno)
+
   url = request.args['url']
   htb = Entry.get_hatebu_api(url)
+
   e = Entry.add_entry(
     url        = htb['url'],
     entry_url  = htb['entry_url'],
@@ -75,8 +80,9 @@ def entry_get(request):
     screenshot = htb['screenshot'],
     bookmarks  = htb['bookmarks'],
   )
-  if not e: return
+  if not e: return Response('entry add error :' + str(inspect.currentframe().f_lineno))
 
+  logging.debug(inspect.currentframe().f_lineno)
   return Response(e.url)
 
 @login_required
@@ -86,8 +92,8 @@ def explore(request):
   url = request.args['url']
   if not url: return Response('invalid url')
 
-  chara = request.user.get_chara()
+  adventurer = request.user.get_adventurer()
   entry = Entry.get_entry(url)
-  result = chara.explore(entry)
+  result = adventurer.explore(entry)
 
   return Response(result)

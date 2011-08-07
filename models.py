@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # htbrpg2kay.models
 
+import logging
+import inspect
+
 from django.utils import simplejson as json
 from google.appengine.ext import db
 from google.appengine.ext import db
@@ -8,29 +11,28 @@ from kay.auth.models import GoogleUser
 import kay.db
 from datetime import datetime
 import urllib
-import logging
 
 # Create your models here.
 class MyUser(GoogleUser):
-  def get_chara(self):
+  def get_adventurer(self):
     u"""ユーザーキャラデータを取得する
     まだキャラが存在しなければ新たに登録する
     """
-    charas = Chara.all().filter('user =', self).fetch(1)
-    if charas:
-      chara = charas[0]
+    adventurers = Adventurer.all().filter('user =', self).fetch(1)
+    if adventurers:
+      adventurer = adventurers[0]
     else:
       name = self.first_name if self.first_name else self.email
-      chara = self.add_chara(name)
-#     chara.img = str(chara.lv) + '.gif' if chara.lv <= 25 else '25.gif'
+      adventurer = self.add_adventurer(name)
+#     adventurer.img = str(adventurer.lv) + '.gif' if adventurer.lv <= 25 else '25.gif'
 
-    return chara
+    return adventurer
 
-  def add_chara(self, name):
-    chara = Chara(user = self, name = name)
-    chara.put()
+  def add_adventurer(self, name):
+    adventurer = Adventurer(user = self, name = name)
+    adventurer.put()
 
-    return chara
+    return adventurer
 
 def value_or_email(value):
   u"""emailプロパティをもっていたらemailを返す。なければそのままの値を返す
@@ -47,16 +49,39 @@ class SsModel(db.Model):
   u"""モデルクラスの共通の親
   """
 
+class Job(SsModel):
+  u"""キャラクターの職業
+  戦士：
+  魔法使い：
+  格闘家：
+  """
+  name   = db.StringProperty(required = True) # 名前
+  hp     = db.IntegerProperty(default = 10)   # HP成長ボーナス
+  attack = db.IntegerProperty(default = 1)    # 攻撃力成長ボーナス
+  guard  = db.IntegerProperty(default = 1)    # 防御力成長ボーナス
+  speed  = db.IntegerProperty(default = 1)    # スピード成長ボーナス
+
+class Fighter(Job):
+  u"""戦士
+  """
+  pass
+#   def get_attack_power(self, enemy_job):
+#     if enemy_job.__class__ == 'Assassin':
+
+class Neet(Job):
+  pass
+
 class Chara(SsModel):
-  u"""ユーザーキャラクターデータ
+  u"""キャラクターデータ
   """
   name   = db.StringProperty(required = True) # 名前
   lv     = db.IntegerProperty(default = 1)    # レベル
   exp    = db.IntegerProperty(default = 0)    # 経験値
+  hp     = db.IntegerProperty(default = 10)   # HP
   attack = db.IntegerProperty(default = 1)    # 攻撃力
-  magic  = db.IntegerProperty(default = 1)    # 魔力
+  guard  = db.IntegerProperty(default = 1)    # 防御力
   speed  = db.IntegerProperty(default = 1)    # スピード
-  user   = db.ReferenceProperty(MyUser, required = True)     # ユーザー
+  job    = db.ReferenceProperty(Job)    # 職業
 
   def to_json(self):
     u"""オブジェクトをJSONにして返す
@@ -64,6 +89,12 @@ class Chara(SsModel):
     attr_list = [(attr, value_or_email(getattr(self, attr))) for attr in self._all_properties]
     attr_dict = dict(attr_list)
     return json.dumps(attr_dict)
+
+
+class Adventurer(Chara):
+  u"""ユーザーキャラクターデータ
+  """
+  user   = db.ReferenceProperty(MyUser, required = True) # ユーザー
 
   def explore(self, entry):
     u"""
@@ -89,6 +120,31 @@ class Chara(SsModel):
     res['damage'] = 10                  # 仮
 
     return res
+
+
+class Enemy(Chara):
+  u"""敵キャラ（ブックマーカー）データ
+  """
+  @classmethod
+  def get_enemy(cls, name):
+    es = cls.all().filter('name =', name).fetch(1)
+    logging.debug(inspect.currentframe().f_lineno)
+    logging.debug(es)
+
+    if es: return es[0]
+
+    e = cls.add_enemy(name)
+    logging.debug(inspect.currentframe().f_lineno)
+    logging.debug(e)
+
+    return e
+
+  @classmethod
+  def add_enemy(self, name):
+    e = Enemy(name = name)
+    e.put()
+
+    return e
 
 
 class Entry(SsModel):
@@ -140,7 +196,8 @@ class Entry(SsModel):
     """
 
     # TODO 同じeidがあったら登録しないでNoneを返す
-    if Entry.all().filter('eid =', eid).fetch(1):
+    e = Entry.all().filter('eid =', eid).fetch(1)
+    if e:
       return None
 
     entry = cls(
@@ -185,7 +242,8 @@ class Entry(SsModel):
 class Bookmark(SsModel):
   u"""はてぶエントリーページについてるブックマーク（モンスターとみなす）
   """
-  user      = db.StringProperty(required=True)       # ブックマークしたユーザ名
+  user      = db.ReferenceProperty(Enemy, required=True)       # ブックマークしたユーザ名
+#   user      = db.StringProperty(required=True)       # ブックマークしたユーザ名
   tags      = db.StringListProperty()   # タグの配列
   timestamp = db.DateTimeProperty() # ブックマークした時刻。new Date(timestamp) で JavaScript の Date オブジェクトになります
   comment   = db.StringProperty()   # ブックマークコメント
@@ -198,9 +256,10 @@ class Bookmark(SsModel):
     for bm in bookmarks:
       if not bm.has_key('user'): continue
 
+      enemy = Enemy.get_enemy(bm.get('user'))
       timestamp = datetime.strptime(bm['timestamp'], "%Y/%m/%d %H:%M:%S")
       bookmark = cls(
-        user      = bm.get('user'),
+        user      = enemy,
         tags      = bm.get('tags'),
         timestamp = timestamp,
         comment   = bm.get('comment'),
@@ -217,3 +276,56 @@ class Bookmark(SsModel):
     bookmarks = cls.all().filter('entry =', entry).fetch(100)
 
     return bookmarks
+
+
+class Skill(SsModel):
+  u"""スキル
+  """
+  name   = db.StringProperty(required = True) # 名前
+  timing = db.IntegerProperty(required = True) # 発動タイミング(1:戦闘開始時、2:攻撃時、3:被攻撃時)
+  typ   = db.IntegerProperty(required = True) # スキルの種類（1:一時的なパラメタ変化、2:恒久的なパラメタ変化、3:その他）
+  param = db.StringProperty()                # 対象パラメタ名
+  value = db.IntegerProperty()               # 効果置
+  job   = db.ReferenceProperty(Job, True)    # 装備可能職業
+
+
+class Battle(SsModel):
+  u"""戦闘の状態を格納
+  """
+  adventurer    = db.ReferenceProperty(Adventurer, required = True) # ユーザーキャラ
+  enemy         = db.ReferenceProperty(Enemy, required = True) # 敵
+  win           = db.BooleanProperty()                           # ユーザー側が勝利したか
+  a_damage      = db.IntegerProperty()                         # ユーザーキャラのダメージ
+  e_damage      = db.IntegerProperty()                         # モンスターのダメージ
+  first         = db.ReferenceProperty(Chara, collection_name = 'first', required = True) # 先攻キャラ
+  second        = db.ReferenceProperty(Chara, collection_name = 'second', required = True) # 後攻キャラ
+  a_start_skill = db.ReferenceProperty(Skill, collection_name = 'a_start_skill')
+  a_attack_skill = db.ReferenceProperty(Skill, collection_name = 'a_attack_skill')
+  a_guard_skill = db.ReferenceProperty(Skill, collection_name = 'a_guard_skill')
+  e_start_skill = db.ReferenceProperty(Skill, collection_name = 'e_start_skill')
+  e_attack_skill = db.ReferenceProperty(Skill, collection_name = 'e_attack_skill')
+  e_guard_skill = db.ReferenceProperty(Skill, collection_name = 'e_guard_skill')
+
+  @classmethod
+  def do(cls, adventurer, enemy):
+    u"""戦闘処理を行う
+    """
+    # + 両者の戦闘開始時スキル発動判定
+    a_start_skill = adventurer.get_skill_start()
+    e_start_skill = enemy.get_skill_start()
+
+    # + 先攻判定（どちらが先攻か）
+
+    # + 先攻の攻撃
+    #  + 先攻の攻撃時スキル発動判定
+    #  + 後攻の被攻撃時スキル発動判定
+    #  + ヒット判定
+    #  + ダメージ計算
+    #  + 両者の生存判定（HPが0以下なら勝敗判定へ）
+    # + 後攻の攻撃
+    #  + 後攻の攻撃時スキル発動判定
+    #  + 先攻の被攻撃時スキル発動判定
+    #  + ヒット判定
+    #  + ダメージ計算
+    #  + 両者の生存判定（HPが0以下なら勝敗判定へ）
+    # + 勝敗判定
