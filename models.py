@@ -103,23 +103,14 @@ class Adventurer(Chara):
     #     results = [res for b in bookmarks: res = self.battle(b) if res['win']]
     battle_result = {'win': True, 'results': []}
     for b in bookmarks:
-      res = self.battle(b)
-      if not res['win']:
+      battle = Battle.do(self, b.user)
+      if not battle.win:
         battle_result['win'] = False
         break
 
-      battle_result['results'].append(res)
+      battle_result['results'].append(battle.win)
 
     return battle_result
-
-  def battle(self, bookmark):
-    u"""戦闘結果を返す
-    """
-    res = {}
-    res['win'] = True                   # 仮
-    res['damage'] = 10                  # 仮
-
-    return res
 
 
 class Enemy(Chara):
@@ -310,17 +301,23 @@ class Battle(SsModel):
   def do(cls, adventurer, enemy):
     u"""戦闘処理を行う
     """
+    """
     # + 両者の戦闘開始時スキル発動判定
-    a_start_skill = adventurer.get_skill_start()
-    e_start_skill = enemy.get_skill_start()
+    a_start_skill = adventurer.get_start_skill()
+    e_start_skill = enemy.get_start_skill()
 
     # + 先攻判定（どちらが先攻か）
+    (firster, seconder) = cls.get_order(adventurer, enemy, a_start_skill, e_start_skill)
 
     # + 先攻の攻撃
     #  + 先攻の攻撃時スキル発動判定
+    f_attack_skill = firster.get_attack_skill()
     #  + 後攻の被攻撃時スキル発動判定
+    s_guard_skill = seconder.get_guard_skill()
     #  + ヒット判定
+    f_is_hit = cls.is_hit(firster, seconder, f_attack_skill, s_guard_skill)
     #  + ダメージ計算
+    s_damage = cls.get_damage()
     #  + 両者の生存判定（HPが0以下なら勝敗判定へ）
     # + 後攻の攻撃
     #  + 後攻の攻撃時スキル発動判定
@@ -329,3 +326,23 @@ class Battle(SsModel):
     #  + ダメージ計算
     #  + 両者の生存判定（HPが0以下なら勝敗判定へ）
     # + 勝敗判定
+    """
+
+    battle = Battle(
+      adventurer     = adventurer,
+      enemy          = enemy,
+      win            = True,
+#       a_damage       = 
+#       e_damage       = 
+      first          = adventurer,
+      second         = enemy
+#       a_start_skill  = 
+#       a_attack_skill = 
+#       a_guard_skill  = 
+#       e_start_skill  = 
+#       e_attack_skill = 
+#       e_guard_skill  = 
+    )
+    battle.put()
+
+    return battle

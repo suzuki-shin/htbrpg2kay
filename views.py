@@ -82,7 +82,6 @@ def entry_get(request):
   )
   if not e: return Response('entry add error :' + str(inspect.currentframe().f_lineno))
 
-  logging.debug(inspect.currentframe().f_lineno)
   return Response(e.url)
 
 @login_required
@@ -95,5 +94,7 @@ def explore(request):
   adventurer = request.user.get_adventurer()
   entry = Entry.get_entry(url)
   result = adventurer.explore(entry)
+  logging.debug(inspect.currentframe().f_lineno)
+  logging.debug(result)
 
   return Response(result)
