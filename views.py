@@ -98,4 +98,6 @@ def explore(request):
   logging.debug(inspect.currentframe().f_lineno)
   logging.debug(result)
 
-  return Response(json.dumps(result))
+#   return Response(json.dumps(result))
+  return render_to_response('htbrpg2kay/explore.html',
+                            {'messages': result['messages']})

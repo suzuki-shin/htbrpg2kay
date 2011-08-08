@@ -11,6 +11,7 @@ from kay.auth.models import GoogleUser
 import kay.db
 from datetime import datetime
 import urllib
+import random
 
 # Create your models here.
 class MyUser(GoogleUser):
@@ -105,6 +106,7 @@ class Adventurer(Chara):
       battle = Battle.do(self, b.user)
       if not battle[0]:
         battle_result['win'] = False
+        battle_result['messages'].append(battle[1])
         break
 
       battle_result['messages'].append(battle[1])
@@ -327,14 +329,18 @@ class Battle(SsModel):
     # + 勝敗判定
     """
 
+    # FOR DUMMY
+    win = True if random.randint(1,99) > 10 else False
+    (firster, seconder) = (adventurer, enemy) if  random.randint(1,99) > 50 else (enemy, adventurer)
+
     battle = Battle(
       adventurer     = adventurer,
       enemy          = enemy,
-      win            = True,
+      win            = win,
       a_damage       = 10,
       e_damage       = 15,
-      first          = adventurer,
-      second         = enemy
+      first          = firster,
+      second         = seconder
 #       a_start_skill  = 
 #       a_attack_skill = 
 #       a_guard_skill  = 
@@ -344,20 +350,17 @@ class Battle(SsModel):
     )
     battle.put()
 
-    return (battle, battle.messages())
+    return (battle.win, battle.messages())
 
   def messages(self):
-    messages = []
     # ユーザーキャラが先攻
     if self.first == self.adventurer:
       m = self.adventurer.name + u"の攻撃"
       m += self.enemy.name + u"の防御"
       m += self.enemy.name + u"に" + str(self.e_damage) + u'のダメージ'
-      messages.append(m)
     else:
       m = self.enemy.name + u"の攻撃"
       m += self.adventurer.name + u"の防御"
       m += self.adventurer.name + u"に" + str(self.a_damage) + u'のダメージ'
-      messages.append(m)
 
-    return messages
+    return m
