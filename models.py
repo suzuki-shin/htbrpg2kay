@@ -100,15 +100,14 @@ class Adventurer(Chara):
     u"""
     """
     bookmarks = entry.get_bookmarks()
-    #     results = [res for b in bookmarks: res = self.battle(b) if res['win']]
-    battle_result = {'win': True, 'results': []}
+    battle_result = {'win': True, 'messages': []}
     for b in bookmarks:
       battle = Battle.do(self, b.user)
-      if not battle.win:
+      if not battle[0]:
         battle_result['win'] = False
         break
 
-      battle_result['results'].append(battle.win)
+      battle_result['messages'].append(battle[1])
 
     return battle_result
 
@@ -332,8 +331,8 @@ class Battle(SsModel):
       adventurer     = adventurer,
       enemy          = enemy,
       win            = True,
-#       a_damage       = 
-#       e_damage       = 
+      a_damage       = 10,
+      e_damage       = 15,
       first          = adventurer,
       second         = enemy
 #       a_start_skill  = 
@@ -345,4 +344,20 @@ class Battle(SsModel):
     )
     battle.put()
 
-    return battle
+    return (battle, battle.messages())
+
+  def messages(self):
+    messages = []
+    # ユーザーキャラが先攻
+    if self.first == self.adventurer:
+      m = self.adventurer.name + u"の攻撃"
+      m += self.enemy.name + u"の防御"
+      m += self.enemy.name + u"に" + str(self.e_damage) + u'のダメージ'
+      messages.append(m)
+    else:
+      m = self.enemy.name + u"の攻撃"
+      m += self.adventurer.name + u"の防御"
+      m += self.adventurer.name + u"に" + str(self.a_damage) + u'のダメージ'
+      messages.append(m)
+
+    return messages

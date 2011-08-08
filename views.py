@@ -27,6 +27,7 @@ from kay.auth.decorators import login_required
 
 import logging
 import inspect
+from django.utils import simplejson as json
 from kay.utils import (
   render_to_response, url_for,
 )
@@ -97,4 +98,4 @@ def explore(request):
   logging.debug(inspect.currentframe().f_lineno)
   logging.debug(result)
 
-  return Response(result)
+  return Response(json.dumps(result))
