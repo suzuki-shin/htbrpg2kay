@@ -123,7 +123,6 @@ def skill_edit(request):
                                int(request.form['typ']),
                                request.form['param'],
                                int(request.form['value']))
-      skill.put()
 
     logging.debug(inspect.currentframe().f_lineno)
     logging.debug(request.form['timing'])

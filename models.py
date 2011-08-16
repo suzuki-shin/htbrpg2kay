@@ -292,6 +292,8 @@ class Skill(SsModel):
     if job: skill.job = job
     skill.put()
 
+    return skill
+
   @classmethod
   def get_skill(cls, name):
     u"""nameからSKILLを返す
