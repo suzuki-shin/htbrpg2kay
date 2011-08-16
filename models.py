@@ -276,9 +276,30 @@ class Skill(SsModel):
   name   = db.StringProperty(required = True) # 名前
   timing = db.IntegerProperty(required = True) # 発動タイミング(1:戦闘開始時、2:攻撃時、3:被攻撃時)
   typ   = db.IntegerProperty(required = True) # スキルの種類（1:一時的なパラメタ変化、2:恒久的なパラメタ変化、3:その他）
-  param = db.StringProperty()                # 対象パラメタ名
-  value = db.IntegerProperty()               # 効果置
-  job   = db.ReferenceProperty(Job, True)    # 装備可能職業
+  param = db.StringProperty(required = True)  # 対象パラメタ名
+  value = db.IntegerProperty(required = True) # 効果置
+  job   = db.ReferenceProperty(Job) # 装備可能職業
+
+  @classmethod
+  def add_skill(cls, name, timing, typ, param, value, job = None):
+    skill = cls(
+      name   = name,
+      timing = timing,
+      typ    = typ,
+      param  = param,
+      value  = value,
+    )
+    if job: skill.job = job
+    skill.put()
+
+  @classmethod
+  def get_skill(cls, name):
+    u"""nameからSKILLを返す
+    """
+    skills = cls.all().filter('name =', name).fetch(1)
+    if not skills: return False
+
+    return skills[0]
 
 
 class Battle(SsModel):
@@ -354,13 +375,30 @@ class Battle(SsModel):
 
   def messages(self):
     # ユーザーキャラが先攻
+    m = ''
     if self.first == self.adventurer:
-      m = self.adventurer.name + u"の攻撃"
-      m += self.enemy.name + u"の防御"
+      if self.a_start_skill:
+        m += self.adventurer.name + u"のスキル「" + self.a_start_skill.name + u"」発動！" 
+      if self.e_start_skill:
+        m += self.enemy.name + u"のスキル「" + self.e_start_skill.name + u"」発動！" 
+      if self.a_attack_skill:
+        m += self.adventurer.name + u"のスキル「" + self.a_attack_skill.name + u"」発動！" 
+      else:
+        m += self.adventurer.name + u"の攻撃"
+      if self.e_guard_skill:
+        m += self.enemy.name + u"のスキル「" + self.e_guard_skill.name + u"」発動！" 
       m += self.enemy.name + u"に" + str(self.e_damage) + u'のダメージ'
     else:
-      m = self.enemy.name + u"の攻撃"
-      m += self.adventurer.name + u"の防御"
+      if self.e_start_skill:
+        m += self.enemy.name + u"のスキル「" + self.e_start_skill.name + u"」発動！" 
+      if self.a_start_skill:
+        m += self.adventurer.name + u"のスキル「" + self.a_start_skill.name + u"」発動！" 
+      if self.e_attack_skill:
+        m += self.enemy.name + u"のスキル「" + self.e_attack_skill.name + u"」発動！" 
+      else:
+        m += self.enemy.name + u"の攻撃"
+      if self.a_guard_skill:
+        m += self.adventurer.name + u"のスキル「" + self.a_guard_skill.name + u"」発動！" 
       m += self.adventurer.name + u"に" + str(self.a_damage) + u'のダメージ'
 
     return m

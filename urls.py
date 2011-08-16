@@ -30,6 +30,7 @@ view_groups = [
     Rule('/adventurer/edit', endpoint='adventurer_edit', view='htbrpg2kay.views.adventurer_edit'),
     Rule('/api',             endpoint='entry_get',       view='htbrpg2kay.views.entry_get'),
     Rule('/explore',         endpoint='explore',         view='htbrpg2kay.views.explore'),
+    Rule('/skill', endpoint='skill_edit', view='htbrpg2kay.views.skill_edit'),
   )
 ]
 

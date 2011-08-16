@@ -36,9 +36,9 @@ from werkzeug import (
 )
 from kay.auth.decorators import login_required
 from  htbrpg2kay.models import (
-  Entry,
+  Entry, Skill,
 )
-from htbrpg2kay.forms import CharaForm
+from htbrpg2kay.forms import (CharaForm, SkillForm)
 
 # Create your views here.
 
@@ -95,9 +95,47 @@ def explore(request):
   adventurer = request.user.get_adventurer()
   entry = Entry.get_entry(url)
   result = adventurer.explore(entry)
+
   logging.debug(inspect.currentframe().f_lineno)
   logging.debug(result)
 
-#   return Response(json.dumps(result))
-  return render_to_response('htbrpg2kay/explore.html',
-                            {'messages': result['messages']})
+  return
+#   return render_to_response('htbrpg2kay/explore.html',
+#                             {'messages': result['messages']})
+
+def skill_edit(request):
+  u"""スキルを登録・編集する管理画面
+  """
+  #   skill = Skill.all().filter('key =', request.form['key']).fetch(1)
+  logging.debug(inspect.currentframe().f_lineno)
+  logging.debug(request.form)
+  form = SkillForm()
+  if request.method == "POST":
+    logging.debug(inspect.currentframe().f_lineno)
+    logging.debug(request.form)
+    if request.form['name']:
+      logging.debug(inspect.currentframe().f_lineno)
+      logging.debug(request.form)
+      skill = Skill.get_skill(request.form['name'])
+    if not skill:
+      skill = Skill.add_skill( request.form['name'],
+                               int(request.form['timing']),
+                               int(request.form['typ']),
+                               request.form['param'],
+                               int(request.form['value']))
+      skill.put()
+
+    logging.debug(inspect.currentframe().f_lineno)
+    logging.debug(request.form['timing'])
+    skill.timing = int(request.form['timing'])
+    skill.typ    = int(request.form['typ'])
+    skill.param  = request.form['param']
+    skill.value  = int(request.form['value'])
+#     skill.job    = request.form['job']
+    skill.put()
+
+    return redirect(url_for('htbrpg2kay/index'))
+
+  return render_to_response('htbrpg2kay/skill_edit.html',
+                            {'form': form.as_widget()})
+
